@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>结婚概率鉴定书</title>
+<meta name="description" content="输入两个名字，测算你们的结婚概率。">
+<meta name="theme-color" content="#efe6d6">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>囍</text></svg>">
+<style>
+  :root {
+    --paper: #fdf8ee;
+    --paper-2: #fbf3e3;
+    --ink: #2b2118;
+    --muted: #8a7a66;
+    --line: #e6d9c2;
+    --red: #b3261e;
+    --gold: #a9854f;
+    --ok: #b3261e;
+    --warn: #b07d2b;
+    --cold: #7d746a;
+  }
+
+  * { box-sizing: border-box; }
+
+  [hidden] { display: none !important; }
+
+  html, body { height: 100%; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    min-height: 100svh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 36px 16px;
+    padding-bottom: calc(36px + env(safe-area-inset-bottom));
+    -webkit-tap-highlight-color: transparent;
+    background-color: #efe6d6;
+    background-image: radial-gradient(rgba(120, 90, 50, 0.07) 1px, transparent 1px);
+    background-size: 18px 18px;
+    color: var(--ink);
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei",
+      ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(120% 90% at 50% 0%, transparent 40%, rgba(120, 90, 50, 0.12) 100%);
+  }
+
+  .sheet {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 560px;
+    padding: 26px;
+    border-radius: 6px;
+    background: linear-gradient(180deg, #fffdf8 0%, var(--paper) 45%, var(--paper-2) 100%);
+    border: 1px solid #e0d2b8;
+    box-shadow:
+      0 26px 60px rgba(80, 55, 20, 0.20),
+      0 2px 0 rgba(255, 255, 255, 0.9) inset;
+  }
+
+  .frame {
+    position: relative;
+    padding: 28px 24px 22px;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+  }
+
+  .frame::before {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    border: 1px solid rgba(179, 38, 30, 0.10);
+    border-radius: 2px;
+    pointer-events: none;
+  }
+
+  .kicker {
+    margin: 0 0 10px;
+    text-align: center;
+    font-size: 9px;
+    letter-spacing: 0.32em;
+    color: var(--muted);
+  }
+
+  h1 {
+    margin: 0;
+    text-align: center;
+    font-family: "Songti SC", "STSong", "SimSun", Georgia, serif;
+    font-size: clamp(25px, 6.4vw, 32px);
+    font-weight: 700;
+    letter-spacing: 0.10em;
+  }
+
+  .rule {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 16px 0 22px;
+    color: var(--gold);
+    font-family: "Songti SC", "SimSun", serif;
+    font-size: 13px;
+  }
+  .rule::before,
+  .rule::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--line), transparent);
+  }
+
+  .names {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+  }
+
+  .slot {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .slot-label {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  .slot input {
+    width: 100%;
+    height: 46px;
+    padding: 0 6px;
+    border: none;
+    border-bottom: 1px dashed #cbb68f;
+    background: transparent;
+    color: var(--ink);
+    font-family: "Songti SC", "STSong", "SimSun", Georgia, serif;
+    font-size: 19px;
+    text-align: center;
+    outline: none;
+    border-radius: 0;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .slot input::placeholder {
+    color: #c2b39a;
+    font-size: 16px;
+  }
+  .slot input:focus {
+    border-bottom-color: var(--red);
+    background: rgba(179, 38, 30, 0.03);
+  }
+
+  .amp {
+    padding-bottom: 12px;
+    color: var(--gold);
+    font-family: Georgia, "Songti SC", serif;
+    font-size: 20px;
+  }
+
+  #go {
+    width: 100%;
+    height: 50px;
+    margin-top: 22px;
+    border: none;
+    border-radius: 4px;
+    background: var(--red);
+    color: #fff7ec;
+    font-family: inherit;
+    font-size: 15px;
+    letter-spacing: 0.22em;
+    text-indent: 0.22em;
+    cursor: pointer;
+    touch-action: manipulation;
+    box-shadow: 0 8px 18px rgba(179, 38, 30, 0.28);
+    transition: transform 0.15s, filter 0.2s, box-shadow 0.2s;
+  }
+  #go:hover { filter: brightness(1.06); }
+  #go:active { transform: translateY(1px); box-shadow: 0 4px 12px rgba(179, 38, 30, 0.24); }
+
+  .shake { animation: shake 0.4s; }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-7px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(3px); }
+  }
+
+  .loading {
+    margin-top: 22px;
+    text-align: center;
+    font-size: 13px;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+  }
+  .loading::after {
+    content: "";
+    animation: dots 1.2s steps(4, end) infinite;
+  }
+  @keyframes dots {
+    0% { content: ""; }
+    25% { content: "·"; }
+    50% { content: "··"; }
+    75% { content: "···"; }
+  }
+
+  .result {
+    margin-top: 24px;
+    padding-top: 22px;
+    border-top: 1px solid var(--line);
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  .result.show {
+    animation: reveal 0.5s ease forwards;
+  }
+  @keyframes reveal {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .prob-block {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .prob-left { flex: 1; min-width: 0; }
+
+  .prob-label {
+    margin: 0;
+    font-size: 11px;
+    letter-spacing: 0.24em;
+    color: var(--muted);
+  }
+
+  .prob {
+    margin: 4px 0 0;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(48px, 14vw, 66px);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--ok);
+    font-variant-numeric: tabular-nums;
+  }
+  .prob i {
+    font-style: normal;
+    font-size: 0.42em;
+    margin-left: 2px;
+    color: var(--muted);
+  }
+
+  .tier {
+    display: inline-block;
+    margin: 10px 0 0;
+    padding: 3px 10px;
+    border: 1px solid currentColor;
+    border-radius: 2px;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    color: var(--ok);
+  }
+
+  .seal {
+    flex: none;
+    width: 92px;
+    height: 92px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 2.5px solid currentColor;
+    border-radius: 50%;
+    color: var(--ok);
+    opacity: 0.92;
+    transform: rotate(-11deg);
+    font-family: "Songti SC", "SimSun", serif;
+  }
+  .seal-zi { font-size: 30px; line-height: 1; }
+  .seal-txt {
+    margin-top: 3px;
+    font-size: 8px;
+    letter-spacing: 0.14em;
+    text-indent: 0.14em;
+  }
+  .seal.stamp { animation: stamp 0.55s cubic-bezier(0.2, 1.4, 0.4, 1) both; }
+  @keyframes stamp {
+    0% { opacity: 0; transform: scale(1.9) rotate(-26deg); }
+    65% { opacity: 1; transform: scale(0.93) rotate(-8deg); }
+    100% { opacity: 0.92; transform: scale(1) rotate(-11deg); }
+  }
+
+  .conclusion {
+    margin: 18px 0 0;
+    padding: 12px 14px;
+    background: rgba(169, 133, 79, 0.07);
+    border-left: 2px solid var(--gold);
+    border-radius: 0 3px 3px 0;
+    font-size: 14px;
+    line-height: 1.75;
+  }
+
+  .metrics {
+    list-style: none;
+    margin: 18px 0 0;
+    padding: 0;
+  }
+  .metrics li {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 9px 0;
+    font-size: 13.5px;
+    border-bottom: 1px dotted #ddcdb0;
+  }
+  .metrics li:last-child { border-bottom: none; }
+  .metrics span { color: var(--muted); letter-spacing: 0.04em; }
+  .metrics i {
+    flex: 1;
+    border-bottom: 1px dotted #e4d7bd;
+    transform: translateY(-3px);
+  }
+  .metrics b {
+    font-family: Georgia, serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+    font-size: 10.5px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+
+  .actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 18px;
+  }
+  .ghost {
+    flex: 1;
+    height: 42px;
+    border: 1px solid #d8c7a8;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .ghost:hover {
+    background: rgba(179, 38, 30, 0.05);
+    border-color: var(--red);
+  }
+  .ghost:active { transform: translateY(1px); }
+
+  .foot {
+    margin: 20px 0 0;
+    text-align: center;
+    font-size: 10.5px;
+    line-height: 1.8;
+    color: #9c8d76;
+  }
+
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 28px;
+    transform: translate(-50%, 12px);
+    max-width: calc(100vw - 36px);
+    padding: 10px 18px;
+    border-radius: 6px;
+    background: rgba(43, 33, 24, 0.94);
+    color: #fdf8ee;
+    font-size: 12.5px;
+    line-height: 1.6;
+    word-break: break-all;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s, transform 0.25s;
+    z-index: 9;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast.selectable {
+    pointer-events: auto;
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  @media (max-width: 400px) {
+    .sheet { padding: 18px; }
+    .frame { padding: 22px 16px 18px; }
+    .seal { width: 76px; height: 76px; }
+    .seal-zi { font-size: 25px; }
+    .names { gap: 6px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
+</style>
+</head>
+<body>
+  <main class="sheet">
+    <div class="frame">
+      <p class="kicker">MARRIAGE PROBABILITY REPORT</p>
+      <h1>结婚概率鉴定书</h1>
+      <div class="rule">囍</div>
+
+      <form id="form" novalidate autocomplete="off">
+        <div class="names">
+          <label class="slot">
+            <span class="slot-label">甲方</span>
+            <input id="a" type="text" placeholder="姓名" maxlength="12" enterkeyhint="next">
+          </label>
+          <div class="amp">&amp;</div>
+          <label class="slot">
+            <span class="slot-label">乙方</span>
+            <input id="b" type="text" placeholder="姓名" maxlength="12" enterkeyhint="go">
+          </label>
+        </div>
+        <button id="go" type="submit">计 算 概 率</button>
+      </form>
+
+      <div id="loading" class="loading" hidden>审核中</div>
+
+      <section id="result" class="result" hidden aria-live="polite">
+        <div class="prob-block">
+          <div class="prob-left">
+            <p class="prob-label">结婚概率</p>
+            <p class="prob"><span id="num">0.00</span><i>%</i></p>
+            <p class="tier" id="tier">—</p>
+          </div>
+          <div class="seal" id="seal">
+            <span class="seal-zi">囍</span>
+            <span class="seal-txt" id="sealTxt">准予结婚</span>
+          </div>
+        </div>
+
+        <p class="conclusion" id="conclusion">—</p>
+
+        <ul class="metrics">
+          <li><span>性格契合度</span><i></i><b id="m1">0</b></li>
+          <li><span>三观一致度</span><i></i><b id="m2">0</b></li>
+          <li><span>家庭支持度</span><i></i><b id="m3">0</b></li>
+          <li><span>吵架和好速度</span><i></i><b id="m4">0</b></li>
+        </ul>
+
+        <div class="meta">
+          <span>编号 <b id="no">—</b></span>
+          <span>签发日期 <b id="date">—</b></span>
+        </div>
+
+        <div class="actions">
+          <button class="ghost" id="again" type="button">重新测算</button>
+          <button class="ghost" id="share" type="button">复制链接</button>
+        </div>
+      </section>
+
+      <p class="foot">
+        本证书依据《缘分测定通则（虚构）》出具，不具备任何法律效力。<br>
+        结果由两个名字计算得出，同名必同果，换序不换果。
+      </p>
+    </div>
+  </main>
+
+  <div class="toast" id="toast" role="status"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  var TIERS = [
+    { min: 95, label: "天生一对", seal: "准予结婚", tone: "ok",
+      text: "建议择日领证，本处可作见证。" },
+    { min: 85, label: "很有夫妻相", seal: "准予结婚", tone: "ok",
+      text: "只差一个把话说开的晚上，剩下的交给时间。" },
+    { min: 70, label: "大概率能成", seal: "建议登记", tone: "ok",
+      text: "该见家长了，记得先打听清楚对方父母的忌口。" },
+    { min: 55, label: "有戏", seal: "建议登记", tone: "ok",
+      text: "感情基础尚可，建议共同经历一次长途旅行再决定。" },
+    { min: 40, label: "需要经营", seal: "再议", tone: "warn",
+      text: "先把恋爱谈明白，再谈婚论嫁。" },
+    { min: 25, label: "缘分尚浅", seal: "再议", tone: "warn",
+      text: "建议从一起吃顿饭开始，别急着规划婚礼。" },
+    { min: 10, label: "建议做朋友", seal: "不予受理", tone: "cold",
+      text: "当朋友可能更长久，真的。" },
+    { min: -1, label: "各自安好", seal: "不予受理", tone: "cold",
+      text: "本处建议：互不打扰，各自精彩。" }
+  ];
+
+  function hashString(str) {
+    var h = 0x811c9dc5;
+    for (var i = 0; i < str.length; i++) {
+      h ^= str.charCodeAt(i);
+      h = Math.imul(h, 0x01000193) >>> 0;
+    }
+    return h >>> 0;
+  }
+
+  function mulberry32(seed) {
+    var a = seed >>> 0;
+    return function () {
+      a = (a + 0x6D2B79F5) >>> 0;
+      var t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+  function tierOf(p) {
+    for (var i = 0; i < TIERS.length; i++) {
+      if (p >= TIERS[i].min) return TIERS[i];
+    }
+    return TIERS[TIERS.length - 1];
+  }
+
+  function computePair(rawA, rawB) {
+    var a = String(rawA || "").trim().replace(/\s+/g, " ");
+    var b = String(rawB || "").trim().replace(/\s+/g, " ");
+    if (!a || !b) return null;
+
+    var pair = [a, b].sort();
+    var key = pair.join(" | ");
+    var seed = hashString(key);
+    var rng = mulberry32(seed);
+
+    var prob, tier, note;
+
+    if (a === b) {
+      prob = 100;
+      tier = TIERS[0];
+      note = "同名同姓，缘分从名字开始就重合了——建议先确认不是失散多年的兄妹。";
+    } else {
+      var u = rng();
+      prob = 100 * Math.pow(u, 0.6);
+      prob = clamp(prob, 0.01, 99.99);
+      tier = tierOf(prob);
+      note = tier.text;
+    }
+
+    var m = [];
+    var bases = [0.96, 0.92, 0.82, 1.0];
+    for (var i = 0; i < 4; i++) {
+      var v = prob * bases[i] + (rng() - 0.5) * 14;
+      m.push(clamp(Math.round(v), 1, 100));
+    }
+
+    var serial = seed.toString(36).toUpperCase();
+    while (serial.length < 8) serial = "0" + serial;
+    serial = serial.slice(0, 4) + "-" + serial.slice(4, 8);
+
+    return {
+      a: a, b: b,
+      prob: prob,
+      tier: tier,
+      note: note,
+      metrics: m,
+      serial: serial,
+      seed: seed
+    };
+  }
+
+  if (typeof document === "undefined") {
+    if (typeof module !== "undefined" && module.exports) {
+      module.exports = { computePair: computePair, tierOf: tierOf };
+    }
+    return;
+  }
+
+  var $ = function (id) { return document.getElementById(id); };
+  var form = $("form"), inA = $("a"), inB = $("b"),
+      result = $("result"), loading = $("loading"),
+      seal = $("seal"), toast = $("toast");
+
+  function toneColor(tone) {
+    return tone === "warn" ? "var(--warn)" : tone === "cold" ? "var(--cold)" : "var(--ok)";
+  }
+
+  function animateNumber(el, target, dur) {
+    var start = performance.now();
+    function frame(now) {
+      var p = Math.min(1, (now - start) / dur);
+      var eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = (target * eased).toFixed(2);
+      if (p < 1) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  function today() {
+    var d = new Date();
+    return d.getFullYear() + " 年 " + (d.getMonth() + 1) + " 月 " + d.getDate() + " 日";
+  }
+
+  function render(r) {
+    var color = toneColor(r.tier.tone);
+
+    $("num").textContent = "0.00";
+    $("num").style.color = color;
+    $("tier").textContent = r.tier.label;
+    $("tier").style.color = color;
+    $("conclusion").textContent = "结论：" + r.note;
+
+    seal.style.color = color;
+    $("sealTxt").textContent = r.tier.seal;
+    seal.classList.remove("stamp");
+    void seal.offsetWidth;
+    seal.classList.add("stamp");
+
+    animateNumber($("num"), r.prob, 1200);
+
+    ["m1", "m2", "m3", "m4"].forEach(function (id, i) {
+      $(id).textContent = r.metrics[i] + "%";
+    });
+
+    $("no").textContent = r.serial;
+    $("date").textContent = today();
+
+    result.classList.remove("show");
+    void result.offsetWidth;
+    result.classList.add("show");
+  }
+
+  function showToast(msg, duration, selectable) {
+    toast.textContent = msg;
+    toast.classList.toggle("selectable", !!selectable);
+    toast.classList.add("show");
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(function () {
+      toast.classList.remove("show");
+      toast.classList.remove("selectable");
+    }, duration || 1800);
+  }
+
+  var timer = null;
+
+  function run(a, b, instant) {
+    if (!String(a).trim() || !String(b).trim()) {
+      var el = !String(a).trim() ? inA : inB;
+      el.classList.remove("shake");
+      void el.offsetWidth;
+      el.classList.add("shake");
+      el.focus();
+      return;
+    }
+
+    result.hidden = true;
+    result.classList.remove("show");
+    loading.hidden = false;
+
+    clearTimeout(timer);
+    timer = setTimeout(function () {
+      var r = computePair(a, b);
+      loading.hidden = true;
+      result.hidden = false;
+      render(r);
+
+      try {
+        var url = new URL(location.href);
+        url.searchParams.set("a", r.a);
+        url.searchParams.set("b", r.b);
+        history.replaceState(null, "", url.toString());
+      } catch (e) {}
+    }, instant ? 60 : 900);
+  }
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    run(inA.value, inB.value);
+  });
+
+  $("again").addEventListener("click", function () {
+    result.hidden = true;
+    inA.value = "";
+    inB.value = "";
+    inA.focus();
+    try {
+      var url = new URL(location.href);
+      url.searchParams.delete("a");
+      url.searchParams.delete("b");
+      history.replaceState(null, "", url.toString());
+    } catch (e) {}
+  });
+
+  function legacyCopy(text) {
+    try {
+      var ta = document.createElement("textarea");
+      ta.value = text;
+      ta.setAttribute("readonly", "");
+      ta.style.cssText = "position:fixed;top:-1000px;left:0;opacity:0;";
+      document.body.appendChild(ta);
+      ta.select();
+      ta.setSelectionRange(0, text.length);
+      var ok = document.execCommand("copy");
+      document.body.removeChild(ta);
+      return ok;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  $("share").addEventListener("click", function () {
+    var url;
+    try {
+      url = new URL(location.href);
+      url.searchParams.set("a", inA.value.trim() || "匿名");
+      url.searchParams.set("b", inB.value.trim() || "某人");
+      url = url.toString();
+    } catch (e) {
+      url = location.href;
+    }
+
+    function fallback() {
+      showToast("长按下面这段文字复制：" + url, 8000, true);
+    }
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(
+        function () { showToast("链接已复制，去微信粘贴给朋友"); },
+        function () { legacyCopy(url) ? showToast("链接已复制") : fallback(); }
+      );
+    } else if (legacyCopy(url)) {
+      showToast("链接已复制");
+    } else {
+      fallback();
+    }
+  });
+
+  var params = new URLSearchParams(location.search);
+  var pa = params.get("a"), pb = params.get("b");
+  if (pa && pb) {
+    inA.value = pa;
+    inB.value = pb;
+    run(pa, pb, true);
+  }
+})();
+</script>
+</body>
+</html>
